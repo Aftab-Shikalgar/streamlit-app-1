@@ -5,13 +5,13 @@ Created on Fri Mar 14 00:27:59 2025
 @author: Aftab
 """
 
-import joblib
+import pickle
 import streamlit as st
 import pandas as pd
 
 # opening model in read binary mode
 load = open('gbr.pkl','rb')
-model = joblib.load(load)
+model = pickle.load(load)
 
 st.set_page_config(page_title="Solar Power Prediction", layout="wide")    
 page_bg_img = '''
