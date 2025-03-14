@@ -93,7 +93,7 @@ def main():
     
     with col1:
         distance_to_solar_noon = st.number_input('Distance to solar noon (in radians)',step=0.000001,format="%.6f",min_value=0.0)
-        temperature = st.number_input('Daily average temperature (in degree celsius)',step=0.01,format="%.2f",max_value=50.0)
+        temperature = st.number_input('Daily average temperature (in degree celsius)',step=0.01,format="%.2f",max_value=80.0)
         wind_direction = st.number_input('Daily average wind Direction (in degrees)',step=0.01,format="%.2f",min_value=0.0,max_value=360.0)
     
     with col2:
