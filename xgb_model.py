@@ -116,7 +116,7 @@ def main():
     if st.button('Predict'):
         result = predict(distance_to_solar_noon, temperature, wind_direction, wind_speed, sky_cover, humidity, avg_wind_speed_period)
         
-        st.markdown(f"<span id='power_output'>Approximately {result[0]:.2f} Jules of power will be generated in the interval of 3 hours.</span>",unsafe_allow_html=True)
+        st.markdown(f"<span id='power_output'>Approximately {result[0]:.2f} Joules of power will be generated in the interval of 3 hours.</span>",unsafe_allow_html=True)
         
         st.session_state.data.append({
             'Distance to Solar Noon': distance_to_solar_noon,
