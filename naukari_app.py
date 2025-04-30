@@ -1,32 +1,54 @@
 import pickle
 from flask import Flask, request, jsonify
+from sklearn.preprocessing import LabelEncoder
+import numpy as np
 
-# Load the trained model
-with open('best_job_title_prediction_model.pkl', 'rb') as f:
-    loaded_model = pickle.load(f)
+# Load the saved model
+filename = 'best_job_title_prediction_model.pkl'
+loaded_model = pickle.load(open(filename, 'rb'))
 
-# Load LabelEncoders
-with open('le_company.pkl', 'rb') as f:
-    le_company = pickle.load(f)
+# Define known categories (same used in Streamlit app)
+company_options = [
+    'Accenture', 'Oracle', 'Siemens', 'BNY Mellon', 'CoinDCX', 'Rave Technologies',
+    'HealthSpring', 'Citibank, N.A', 'Snaphunt', 'Duff & Phelps', 'Credit Suisse',
+    'Prodair Air Products', 'Ubisoft', 'CompuCom', 'Kraftmaid Services India',
+    'Method Studios', 'Company3 Method India Private Limited', 'Eversendai', 'Shell',
+    'NatWest Group', 'Sona Comstar', 'RRD', 'Thinksynq Solutions', 'Icon Clinical Research',
+    'Aspire Systems'
+]
 
-with open('le_location.pkl', 'rb') as f:
-    le_location = pickle.load(f)
+location_options = [
+    'Mumbai ', 'Mumbai (All Areas)', 'Mumbai (All Areas), Hyderabad/Secunderabad, Pune, Chennai, Delhi / NCR, Bangalore/Bengaluru',
+    'Hyderabad/Secunderabad, Pune, Chennai, Delhi / NCR, Bangalore/Bengaluru', 'Hyderabad/Secunderabad', 'Pune', 'Chennai', 'Delhi / NCR',
+    'Bangalore/Bengaluru', 'Chennai(Teynampet)', 'Chennai(Kodambakkam)', 'Mumbai, Gurgaon/Gurugram, Aurangabad, Vadodara',
+    'Pune, Hyderabad/Secunderabad, Chennai, Delhi / NCR, Bangalore/Bengaluru, Mumbai (All Areas)',
+    'Chennai, Hyderabad/Secunderabad, Pune, Delhi / NCR, Bangalore/Bengaluru, Mumbai (All Areas)',
+    'Chennai(Ekkaduthangal)', 'Chennai(Kodambakkam), Kodambakkam'
+]
 
-with open('le_salary.pkl', 'rb') as f:
-    le_salary = pickle.load(f)
+salary_options = ['0-3 LPA', '3-6 LPA', '6-10 LPA', '10-15 LPA', '15+ LPA']  # Example
 
-with open('le_title.pkl', 'rb') as f:
-    le_title = pickle.load(f)
+# Fit LabelEncoders
+le_company = LabelEncoder()
+le_company.fit(company_options)
 
-# Initialize Flask app
+le_location = LabelEncoder()
+le_location.fit(location_options)
+
+le_salary = LabelEncoder()
+le_salary.fit(salary_options)
+
+# You may have to adjust this if the model expects encoded targets
+le_title = LabelEncoder()
+le_title.classes_ = loaded_model.classes_  # Assuming model has .classes_ attribute
+
+# Flask app
 app = Flask(__name__)
 
 @app.route('/predict', methods=['POST'])
 def predict_job_title():
     try:
         data = request.get_json()
-
-        # Extract features from request
         experience = float(data['experience'])
         reviews = int(data['reviews'])
         ratings = float(data['ratings'])
@@ -34,33 +56,30 @@ def predict_job_title():
         location = data['location']
         salary = data['salary']
 
-        # Encode categorical variables with fallback for unknown values
+        # Encode inputs
         try:
             company_enc = le_company.transform([company])[0]
         except ValueError:
-            company_enc = -1  # or a neutral default
-
+            company_enc = -1
         try:
             location_enc = le_location.transform([location])[0]
         except ValueError:
             location_enc = -1
-
         try:
             salary_enc = le_salary.transform([salary])[0]
         except ValueError:
             salary_enc = -1
 
-        # Form feature vector
+        # Model input
         input_features = [[experience, reviews, ratings, company_enc, location_enc, salary_enc]]
-
-        # Make prediction
         prediction = loaded_model.predict(input_features)
-        predicted_title = le_title.inverse_transform(prediction)[0]
 
-        return jsonify({'predicted_job_title': predicted_title})
+        predicted_job_title = le_title.inverse_transform(prediction)[0]
+
+        return jsonify({'predicted_job_title': predicted_job_title})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False)  # Important to avoid signal/thread issue
+    app.run(debug=True)
